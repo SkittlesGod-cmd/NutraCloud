@@ -5,22 +5,17 @@ const PUBLIC_ROUTES = [
   "/",
   "/sign-in",
   "/sign-up",
-  "/get-access",
   "/features",
   "/pricing",
   "/for-agencies",
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
-  "/api/waitlist",
-  "/api/admin/login",
-  "/api/admin/logout",
-  "/api/admin/waitlist/export",
 ];
 
 const AUTH_ROUTES = ["/sign-in", "/sign-up", "/forgot-password", "/reset-password"];
 
-async function proxyHandler(request: NextRequest) {
+async function middlewareHandler(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Create response with proper headers
@@ -90,9 +85,9 @@ async function proxyHandler(request: NextRequest) {
   return response;
 }
 
-// Export the proxy function as default (required for Next.js 16 middleware)
+// Export the middleware function as default
 export default async function middleware(request: NextRequest) {
-  return proxyHandler(request);
+  return middlewareHandler(request);
 }
 
 // Keep config for matcher

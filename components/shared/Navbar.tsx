@@ -121,17 +121,17 @@ export function Navbar() {
                 <>
                   {!isAuthPage && (
                     <>
-                      <Link
-                        href="/admin/waitlist"
+                      <ButtonLink
+                        href="/sign-in"
                         className="text-sm text-gray-500 transition-colors hover:text-gray-950"
                       >
-                        Admin
-                      </Link>
+                        Sign in
+                      </ButtonLink>
                       <ButtonLink
-                        href="/get-access"
+                        href="/sign-up"
                         className="rounded-full bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
                       >
-                        Join waitlist
+                        Get started
                       </ButtonLink>
                     </>
                   )}
@@ -194,18 +194,18 @@ export function Navbar() {
             ) : (
               <>
                 <Link
-                  href="/admin/waitlist"
+                  href="/sign-in"
                   onClick={() => setMobileOpen(false)}
                   className="text-[15px] font-medium text-gray-900"
                 >
-                  Admin
+                  Sign in
                 </Link>
                 <ButtonLink
-                  href="/get-access"
+                  href="/sign-up"
                   onClick={() => setMobileOpen(false)}
                   className="mt-2 justify-center rounded-full bg-gray-950 px-5 py-3 text-sm font-medium text-white"
                 >
-                  Join waitlist
+                  Get started
                 </ButtonLink>
               </>
             )}
