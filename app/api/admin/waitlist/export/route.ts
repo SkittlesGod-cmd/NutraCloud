@@ -65,7 +65,7 @@ export async function GET() {
     );
   }
 
-  const filename = `enhancelabs-waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
+  const filename = `nutracloud-waitlist-${new Date().toISOString().slice(0, 10)}.csv`;
 
   return new Response(toCsv((data ?? []) as WaitlistRow[]), {
     status: 200,

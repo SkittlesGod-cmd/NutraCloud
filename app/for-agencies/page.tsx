@@ -47,7 +47,7 @@ export default function ForAgenciesPage() {
             Built for agencies shaping supplement products for other brands.
           </h1>
           <p className="body-lg mt-6 max-w-2xl">
-            EnhanceLabs helps agencies keep formulation work more legible,
+            NutraCloud helps agencies keep formulation work more legible,
             repeatable, and easier to hand off across clients, reviewers, and
             manufacturing partners.
           </p>

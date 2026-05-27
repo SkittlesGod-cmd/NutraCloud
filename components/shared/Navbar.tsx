@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { ButtonLink } from "@/components/button-link";
 import { useScrolled } from "@/hooks/use-scrolled";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { createBrowserClient } from "@/utils/supabase/client";
 
 const NAV_LINKS = [
   { label: "Features", href: "/features" },
@@ -16,8 +18,20 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const scrolled = useScrolled(24);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isLoading } = useAuth();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleSignOut = async () => {
+    const supabase = createBrowserClient();
+    await supabase.auth.signOut();
+    router.push("/sign-in");
+  };
+
+  const isAuthPage = pathname === "/sign-in" || pathname === "/sign-up";
+  const isDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard");
 
   return (
     <header className="sticky top-0 z-50 px-3 pt-3">
@@ -30,7 +44,7 @@ export function Navbar() {
         )}
       >
         <Link href="/" className="shrink-0 text-[15px] font-semibold tracking-[-0.02em] text-gray-950">
-          EnhanceLabs
+          NutraCloud
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
@@ -53,18 +67,78 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/admin/waitlist"
-            className="text-sm text-gray-500 transition-colors hover:text-gray-950"
-          >
-            Admin
-          </Link>
-          <ButtonLink
-            href="/get-access"
-            className="rounded-full bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
-          >
-            Join waitlist
-          </ButtonLink>
+          {!isLoading && (
+            <>
+              {user ? (
+                <>
+                  {/* Dashboard link for authenticated users */}
+                  <Link
+                    href="/dashboard"
+                    className="text-sm text-gray-500 transition-colors hover:text-gray-950"
+                  >
+                    Dashboard
+                  </Link>
+                  {/* User menu dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 rounded-full px-4 py-2 text-sm text-gray-700 transition hover:bg-black/5"
+                    >
+                      <div className="flex size-7 items-center justify-center rounded-full bg-brand text-white">
+                        <User className="size-3.5" />
+                      </div>
+                      <span className="max-w-[120px] truncate">
+                        {user.email?.split("@")[0]}
+                      </span>
+                    </button>
+                    {showUserMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-gray-200 bg-white py-2 shadow-lg">
+                        <Link
+                          href="/profile"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <User className="size-4" />
+                          Profile
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            setShowUserMenu(false);
+                            await handleSignOut();
+                          }}
+                          className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
+                        >
+                          <LogOut className="size-4" />
+                          Sign out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {!isAuthPage && (
+                    <>
+                      <Link
+                        href="/admin/waitlist"
+                        className="text-sm text-gray-500 transition-colors hover:text-gray-950"
+                      >
+                        Admin
+                      </Link>
+                      <ButtonLink
+                        href="/get-access"
+                        className="rounded-full bg-gray-950 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                      >
+                        Join waitlist
+                      </ButtonLink>
+                    </>
+                  )}
+                </>
+              )}
+            </>
+          )}
         </div>
 
         <button
@@ -90,20 +164,51 @@ export function Navbar() {
                 {label}
               </Link>
             ))}
-            <Link
-              href="/admin/waitlist"
-              onClick={() => setMobileOpen(false)}
-              className="text-[15px] font-medium text-gray-900"
-            >
-              Admin
-            </Link>
-            <ButtonLink
-              href="/get-access"
-              onClick={() => setMobileOpen(false)}
-              className="mt-2 justify-center rounded-full bg-gray-950 px-5 py-3 text-sm font-medium text-white"
-            >
-              Join waitlist
-            </ButtonLink>
+            {!isLoading && user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-[15px] font-medium text-gray-900"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-[15px] font-medium text-gray-900"
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setMobileOpen(false);
+                    await handleSignOut();
+                  }}
+                  className="text-left text-[15px] font-medium text-red-600"
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/admin/waitlist"
+                  onClick={() => setMobileOpen(false)}
+                  className="text-[15px] font-medium text-gray-900"
+                >
+                  Admin
+                </Link>
+                <ButtonLink
+                  href="/get-access"
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-2 justify-center rounded-full bg-gray-950 px-5 py-3 text-sm font-medium text-white"
+                >
+                  Join waitlist
+                </ButtonLink>
+              </>
+            )}
           </nav>
         </div>
       ) : null}

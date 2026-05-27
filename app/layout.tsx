@@ -6,14 +6,15 @@ import { Navbar } from "@/components/shared/Navbar";
 import { Footer } from "@/components/shared/Footer";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/hooks/auth-context";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://enhancelabs.ai";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nutracloud.ai";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "EnhanceLabs — AI Supplement Formulation Platform",
-    template: "%s | EnhanceLabs",
+    default: "NutraCloud — AI Supplement Formulation Platform",
+    template: "%s | NutraCloud",
   },
   description:
     "Evidence-backed supplement formulations in minutes. RAG-powered ingredient research, FDA compliance checking, and manufacturer connections for supplement brands and agencies.",
@@ -26,17 +27,17 @@ export const metadata: Metadata = {
     "supplement manufacturer",
   ],
   openGraph: {
-    title: "EnhanceLabs — AI Supplement Formulation Platform",
+    title: "NutraCloud — AI Supplement Formulation Platform",
     description:
       "Evidence-backed supplement formulations in minutes. RAG-powered ingredient research, FDA compliance checking, and manufacturer connections.",
     url: siteUrl,
-    siteName: "EnhanceLabs",
+    siteName: "NutraCloud",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "EnhanceLabs — AI Supplement Formulation Platform",
+        alt: "NutraCloud — AI Supplement Formulation Platform",
       },
     ],
     locale: "en_US",
@@ -44,7 +45,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "EnhanceLabs — AI Supplement Formulation Platform",
+    title: "NutraCloud — AI Supplement Formulation Platform",
     description:
       "Evidence-backed supplement formulations in minutes. RAG-powered ingredient research, FDA compliance checking, and manufacturer connections.",
     images: ["/opengraph-image"],
@@ -65,7 +66,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "EnhanceLabs",
+  name: "NutraCloud",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description:
@@ -99,7 +100,7 @@ const jsonLd = {
   ],
   publisher: {
     "@type": "Organization",
-    name: "EnhanceLabs",
+    name: "NutraCloud",
     url: siteUrl,
   },
 };
@@ -124,9 +125,11 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <ThemeProvider>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </AuthProvider>
           <Toaster richColors position="top-right" />
         </ThemeProvider>
       </body>

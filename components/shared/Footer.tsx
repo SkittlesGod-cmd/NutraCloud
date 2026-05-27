@@ -15,7 +15,7 @@ export function Footer() {
         <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-md">
             <p className="text-[15px] font-semibold tracking-[-0.02em] text-gray-950">
-              EnhanceLabs
+              NutraCloud
             </p>
             <p className="mt-3 fine-print">
               Evidence-backed product development for supplement brands and
@@ -36,7 +36,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col gap-3 border-t border-black/6 pt-6 text-sm text-gray-500 md:flex-row md:items-center md:justify-between">
-          <p>© 2026 EnhanceLabs, Inc.</p>
+          <p>© 2026 NutraCloud, Inc.</p>
           <p>Built for teams moving from formulation to launch with more confidence.</p>
         </div>
       </div>

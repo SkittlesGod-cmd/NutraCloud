@@ -242,7 +242,7 @@ function BrandPanel() {
       <div className="relative z-10">
         <Link href="/" className="flex items-center gap-2.5 mb-10">
           <span className="size-2 rounded-full bg-white" />
-          <span className="font-semibold text-white text-lg tracking-tight">EnhanceLabs</span>
+          <span className="font-semibold text-white text-lg tracking-tight">NutraCloud</span>
         </Link>
 
         <h2 className="text-3xl font-bold text-white leading-snug mb-8">
@@ -396,7 +396,7 @@ export default function GetAccessPage() {
                 {/* Mobile logo */}
                 <Link href="/" className="flex lg:hidden items-center gap-2 mb-5">
                   <span className="size-2 rounded-full bg-brand" />
-                  <span className="font-semibold text-gray-900">EnhanceLabs</span>
+                  <span className="font-semibold text-gray-900">NutraCloud</span>
                 </Link>
 
                 <div className="mb-7">

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-const ADMIN_COOKIE_NAME = "enhancelabs_waitlist_admin";
+const ADMIN_COOKIE_NAME = "nutracloud_waitlist_admin";
 const ADMIN_SESSION_MAX_AGE = 60 * 60 * 12;
 
 function getAdminPassword() {
