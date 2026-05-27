@@ -1,9 +1,10 @@
 name: Claude Code Review
 on:
-  push:
-    branches: [ main, master ]
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize] # Uses supported PR events
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Resolves the Node 20 deprecation warning
 
 jobs:
   claude-review:
