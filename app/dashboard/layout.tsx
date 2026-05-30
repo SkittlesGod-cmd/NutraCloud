@@ -11,6 +11,7 @@ const NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/formulations", label: "Formulations", icon: Beaker },
   { href: "/dashboard/research", label: "Research", icon: FlaskConical },
+  { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

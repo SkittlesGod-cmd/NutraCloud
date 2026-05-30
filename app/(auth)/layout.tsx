@@ -8,6 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-[#fafaf9] flex">
       {/* Left panel */}
       <div className="relative hidden lg:flex lg:w-[480px] xl:w-[520px] flex-col justify-between overflow-hidden bg-gray-950 p-12">
+
         {/* Subtle grid */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -22,10 +23,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="pointer-events-none absolute bottom-0 -left-20 size-72 rounded-full bg-brand/10 blur-3xl" />
 
         <div className="relative z-10">
-          <div className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-brand" />
             <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">FormLayer</span>
-          </div>
+          </a>
 
           <div className="mt-16">
             <h2 className="text-[28px] font-semibold leading-[1.2] tracking-[-0.03em] text-white">
