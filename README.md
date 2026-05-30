@@ -1,8 +1,8 @@
-# NutraCloud
+# FormLayer
 
 AI-powered supplement formulation platform for brands and agencies. Evidence-backed formulations in minutes — RAG-powered ingredient research, FDA compliance checking, and direct manufacturer connections.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/nutracloud&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SITE_URL)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/formlayer&env=NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_SITE_URL)
 
 ## Stack
 
@@ -17,8 +17,8 @@ AI-powered supplement formulation platform for brands and agencies. Evidence-bac
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/your-org/nutracloud.git
-cd nutracloud
+git clone https://github.com/your-org/formlayer.git
+cd formlayer
 npm install
 
 # 2. Environment variables
@@ -63,7 +63,7 @@ Then copy your **Project URL** and **anon public key** from Dashboard → Projec
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
-| `NEXT_PUBLIC_SITE_URL` | Canonical site URL (e.g. `https://nutracloud.ai`) |
+| `NEXT_PUBLIC_SITE_URL` | Canonical site URL (e.g. `https://formlayer.ai`) |
 
 ## Build & Deploy
 

@@ -96,7 +96,7 @@ export default function HomePage() {
               Build better supplement products with a calmer workflow.
             </h1>
             <p className="body-lg mt-6 max-w-2xl">
-              NutraCloud brings research, formulation logic, compliance review,
+              FormLayer brings research, formulation logic, compliance review,
               and manufacturer handoff into one product layer for brands and
               agencies working in supplements.
             </p>

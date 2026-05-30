@@ -46,7 +46,7 @@ export function Navbar() {
         )}
       >
         <Link href="/" className="shrink-0 text-[15px] font-semibold tracking-[-0.02em] text-gray-950">
-          NutraCloud
+          FormLayer
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

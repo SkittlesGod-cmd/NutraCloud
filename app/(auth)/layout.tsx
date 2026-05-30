@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Sign In",
-  description: "Sign in to your NutraCloud account",
+  description: "Sign in to your FormLayer account",
 };
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +24,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="relative z-10">
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-brand" />
-            <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">NutraCloud</span>
+            <span className="text-[15px] font-semibold tracking-[-0.01em] text-white">FormLayer</span>
           </div>
 
           <div className="mt-16">
@@ -58,7 +58,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         <div className="relative z-10">
           <p className="text-[11px] font-medium uppercase tracking-widest text-white/20">
-            NutraCloud · 2026
+            FormLayer · 2026
           </p>
         </div>
       </div>

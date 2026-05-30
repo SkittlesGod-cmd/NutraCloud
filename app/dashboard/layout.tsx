@@ -61,7 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="flex items-center gap-2 text-[13px] font-semibold tracking-[-0.01em] text-gray-950"
           >
             <span className="size-1.5 rounded-full bg-brand" />
-            NutraCloud
+            FormLayer
           </Link>
 
           {/* Center nav */}

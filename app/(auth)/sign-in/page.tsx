@@ -104,7 +104,7 @@ function SignInForm() {
     <div className="w-full max-w-[360px]">
       <Link href="/" className="mb-6 flex lg:hidden items-center gap-2">
         <span className="size-1.5 rounded-full bg-brand" />
-        <span className="text-[13px] font-semibold text-gray-950">NutraCloud</span>
+        <span className="text-[13px] font-semibold text-gray-950">FormLayer</span>
       </Link>
 
       <div className="rounded-2xl border border-black/[0.06] bg-white p-8 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">

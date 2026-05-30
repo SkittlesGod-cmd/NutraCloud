@@ -57,7 +57,7 @@ export default function FeaturesPage() {
             A more coherent system for supplement product development.
           </h1>
           <p className="body-lg mt-6 max-w-2xl">
-            NutraCloud is designed for teams that want stronger research
+            FormLayer is designed for teams that want stronger research
             context, cleaner compliance review, and a more organized path into
             manufacturing.
           </p>

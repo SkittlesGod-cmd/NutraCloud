@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "NutraCloud — AI Supplement Formulation Platform";
+export const alt = "FormLayer — AI Supplement Formulation Platform";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -71,7 +71,7 @@ export default function OGImage() {
               letterSpacing: "-0.5px",
             }}
           >
-            NutraCloud
+            FormLayer
           </span>
         </div>
 

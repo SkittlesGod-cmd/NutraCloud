@@ -26,7 +26,7 @@ This guide walks you through setting up OAuth providers and customizing email te
 
 1. Click **Create Credentials → OAuth client ID**
 2. Application type: **Web application**
-3. Name: `NutraCloud Supabase`
+3. Name: `FormLayer Supabase`
 4. **Authorized redirect URIs**: Add:
    ```
    https://vcrntibadyvshzzglcfn.supabase.co/auth/v1/callback
@@ -49,7 +49,7 @@ This guide walks you through setting up OAuth providers and customizing email te
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
 2. Click **New OAuth App**
 3. Fill in:
-   - **Application name**: `NutraCloud`
+   - **Application name**: `FormLayer`
    - **Homepage URL**: `http://localhost:3000`
    - **Authorization callback URL**: 
      ```
@@ -137,9 +137,9 @@ Use these placeholders in your templates:
 http://localhost:3000
 http://localhost:3000/dashboard
 http://localhost:3000/auth/callback
-https://nutracloud.ai
-https://nutracloud.ai/dashboard
-https://nutracloud.ai/auth/callback
+https://formlayer.ai
+https://formlayer.ai/dashboard
+https://formlayer.ai/auth/callback
 ```
 
 3. Click **Save**

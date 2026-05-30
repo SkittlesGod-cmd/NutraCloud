@@ -12,8 +12,8 @@ export function getAIClient(): OpenAI {
       baseURL: "https://openrouter.ai/api/v1",
       apiKey: key,
       defaultHeaders: {
-        "HTTP-Referer": "https://nutracloud.app",
-        "X-Title": "NutraCloud",
+        "HTTP-Referer": "https://formlayer.app",
+        "X-Title": "FormLayer",
       },
     });
   }

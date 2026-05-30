@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
         {/* Mobile logo */}
         <Link href="/" className="flex lg:hidden items-center gap-2 mb-5">
           <span className="size-2 rounded-full bg-brand" />
-          <span className="font-semibold text-gray-900">NutraCloud</span>
+          <span className="font-semibold text-gray-900">FormLayer</span>
         </Link>
 
         <div className="mb-7">

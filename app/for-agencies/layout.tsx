@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "For Agencies",
   description:
-    "NutraCloud for supplement agencies: manage multiple brands, streamline formulation workflows, and deliver FDA-compliant products faster with AI-powered tools.",
+    "FormLayer for supplement agencies: manage multiple brands, streamline formulation workflows, and deliver FDA-compliant products faster with AI-powered tools.",
   alternates: {
     canonical: "/for-agencies",
   },

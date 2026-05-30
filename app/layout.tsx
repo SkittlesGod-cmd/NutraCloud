@@ -8,13 +8,13 @@ import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/hooks/auth-context";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://nutracloud.ai";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://formlayer.ai";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "NutraCloud — AI Supplement Formulation Platform",
-    template: "%s | NutraCloud",
+    default: "FormLayer — AI Supplement Formulation Platform",
+    template: "%s | FormLayer",
   },
   description:
     "Evidence-backed supplement formulations in minutes. RAG-powered ingredient research, FDA compliance checking, and manufacturer connections for supplement brands and agencies.",
@@ -27,17 +27,17 @@ export const metadata: Metadata = {
     "supplement manufacturer",
   ],
   openGraph: {
-    title: "NutraCloud — AI Supplement Formulation Platform",
+    title: "FormLayer — AI Supplement Formulation Platform",
     description:
       "Evidence-backed supplement formulations in minutes. RAG-powered ingredient research, FDA compliance checking, and manufacturer connections.",
     url: siteUrl,
-    siteName: "NutraCloud",
+    siteName: "FormLayer",
     images: [
       {
         url: "/opengraph-image",
         width: 1200,
         height: 630,
-        alt: "NutraCloud — AI Supplement Formulation Platform",
+        alt: "FormLayer — AI Supplement Formulation Platform",
       },
     ],
     locale: "en_US",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NutraCloud — AI Supplement Formulation Platform",
+    title: "FormLayer — AI Supplement Formulation Platform",
     description:
       "Evidence-backed supplement formulations in minutes. RAG-powered ingredient research, FDA compliance checking, and manufacturer connections.",
     images: ["/opengraph-image"],
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "NutraCloud",
+  name: "FormLayer",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web",
   description:
@@ -100,7 +100,7 @@ const jsonLd = {
   ],
   publisher: {
     "@type": "Organization",
-    name: "NutraCloud",
+    name: "FormLayer",
     url: siteUrl,
   },
 };

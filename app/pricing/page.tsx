@@ -16,7 +16,7 @@ export default function PricingPage() {
       <nav className="border-b border-black/[0.06] bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="text-[15px] font-semibold tracking-tight text-gray-950">
-            NutraCloud
+            FormLayer
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/dashboard" className="text-[13px] text-gray-500 hover:text-gray-800 transition">
