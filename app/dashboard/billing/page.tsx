@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, ArrowRight, Loader2, ExternalLink, Zap, AlertCircle } from "lucide-react";
-import { initializePaddle, type Paddle } from "@paddle/paddle-js";
+import { initializePaddle, CheckoutEventNames, type Paddle } from "@paddle/paddle-js";
 import { PLANS, PLAN_ORDER, getPlan, type PlanId } from "@/lib/billing/plans";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -86,11 +86,15 @@ export default function BillingPage() {
       customer: userData.email ? { email: userData.email } : undefined,
       customData: userData.id ? { user_id: userData.id } : undefined,
       settings: { displayMode: "overlay", theme: "light" },
-      onComplete: () => {
-        toast.success("Subscription activated! Refreshing…");
-        setTimeout(() => window.location.reload(), 2500);
+      eventCallback: (e) => {
+        if (e.name === CheckoutEventNames.CHECKOUT_COMPLETED) {
+          toast.success("Subscription activated! Refreshing…");
+          setTimeout(() => window.location.reload(), 2500);
+        }
+        if (e.name === CheckoutEventNames.CHECKOUT_CLOSED) {
+          setCheckoutLoading(null);
+        }
       },
-      onClose: () => setCheckoutLoading(null),
     });
   }
 
