@@ -9,65 +9,96 @@ export interface AgentModel {
 }
 
 export const AGENT_MODELS: AgentModel[] = [
+  // ── Free ────────────────────────────────────────────────────────────────────
   {
     id: "nvidia/nemotron-3-super-120b-a12b:free",
-    label: "Nemotron 120B",
-    description: "Fast, free — FormLayer default",
+    label: "Nemotron 3 Super 120B",
+    description: "NVIDIA · 1M context · FormLayer default",
     tier: "free",
+    contextK: 1000,
+  },
+  {
+    id: "google/gemma-4-31b-it:free",
+    label: "Gemma 4 31B",
+    description: "Google · 262K context · strong instruction following",
+    tier: "free",
+    contextK: 262,
+  },
+  {
+    id: "moonshotai/kimi-k2.6:free",
+    label: "Kimi K2.6",
+    description: "MoonshotAI · 262K context · fast and capable",
+    tier: "free",
+    contextK: 262,
+  },
+  {
+    id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+    label: "Nemotron Nano Omni",
+    description: "NVIDIA · 256K context · chain-of-thought reasoning",
+    tier: "free",
+    contextK: 256,
+  },
+  // ── Standard ────────────────────────────────────────────────────────────────
+  {
+    id: "google/gemini-3.5-flash",
+    label: "Gemini 3.5 Flash",
+    description: "Google · fast, affordable, multimodal",
+    tier: "standard",
+    contextK: 1000,
+  },
+  {
+    id: "deepseek/deepseek-v4-flash",
+    label: "DeepSeek V4 Flash",
+    description: "DeepSeek · very low cost, high quality",
+    tier: "standard",
     contextK: 128,
   },
   {
-    id: "meta-llama/llama-3.1-70b-instruct:free",
-    label: "Llama 3.1 70B",
-    description: "Open-source, free via OpenRouter",
-    tier: "free",
+    id: "openai/gpt-5.4-mini",
+    label: "GPT-5.4 Mini",
+    description: "OpenAI · fast and affordable",
+    tier: "standard",
     contextK: 128,
   },
   {
-    id: "mistralai/mixtral-8x7b-instruct:free",
-    label: "Mixtral 8x7B",
-    description: "Efficient mixture-of-experts",
-    tier: "free",
+    id: "mistralai/mistral-small-2603",
+    label: "Mistral Small",
+    description: "Mistral AI · efficient, good JSON output",
+    tier: "standard",
     contextK: 32,
   },
+  // ── Premium ─────────────────────────────────────────────────────────────────
   {
-    id: "deepseek/deepseek-chat",
-    label: "DeepSeek V3",
-    description: "High quality, very low cost",
-    tier: "standard",
-    contextK: 64,
-  },
-  {
-    id: "openai/gpt-4o-mini",
-    label: "GPT-4o Mini",
-    description: "Fast and affordable from OpenAI",
-    tier: "standard",
-    contextK: 128,
-  },
-  {
-    id: "openai/gpt-4o",
-    label: "GPT-4o",
-    description: "OpenAI flagship — best reasoning",
-    tier: "premium",
-    contextK: 128,
-  },
-  {
-    id: "anthropic/claude-3.5-sonnet",
-    label: "Claude 3.5 Sonnet",
-    description: "Anthropic's best for complex tasks",
+    id: "anthropic/claude-opus-4.7",
+    label: "Claude Opus 4.7",
+    description: "Anthropic · best reasoning and scientific accuracy",
     tier: "premium",
     contextK: 200,
   },
   {
-    id: "google/gemini-pro-1.5",
-    label: "Gemini 1.5 Pro",
-    description: "Google's advanced multimodal model",
+    id: "openai/gpt-5.4",
+    label: "GPT-5.4",
+    description: "OpenAI · flagship model",
     tier: "premium",
-    contextK: 1000,
+    contextK: 128,
+  },
+  {
+    id: "openai/gpt-5.5",
+    label: "GPT-5.5",
+    description: "OpenAI · most capable, highest quality",
+    tier: "premium",
+    contextK: 128,
+  },
+  {
+    id: "deepseek/deepseek-v4-pro",
+    label: "DeepSeek V4 Pro",
+    description: "DeepSeek · pro-grade, excellent STEM reasoning",
+    tier: "premium",
+    contextK: 128,
   },
 ];
 
-export const DEFAULT_MODEL = AGENT_MODELS[0].id;
+export const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
 export function getModel(id: string): AgentModel {
   return AGENT_MODELS.find(m => m.id === id) ?? AGENT_MODELS[0];
