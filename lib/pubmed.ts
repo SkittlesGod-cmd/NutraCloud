@@ -12,6 +12,18 @@ export interface PubMedArticle {
   url: string;
 }
 
+interface PubMedSummaryAuthor {
+  name?: string;
+}
+
+interface PubMedSummary {
+  title?: string;
+  authors?: PubMedSummaryAuthor[];
+  fulljournalname?: string;
+  source?: string;
+  pubdate?: string;
+}
+
 export async function searchPubMed(
   query: string,
   maxResults = 5
@@ -37,16 +49,17 @@ export async function searchPubMed(
     return ids
       .filter(id => result[id])
       .map(id => {
-        const art = result[id];
+        const art = result[id] as PubMedSummary;
         const authors = (art.authors ?? [])
           .slice(0, 3)
-          .map((a: any) => a.name)
+          .map((a) => a.name)
+          .filter(Boolean)
           .join(", ");
 
         return {
           pmid: id,
           title: art.title ?? "",
-          authors: authors + (art.authors?.length > 3 ? " et al." : ""),
+          authors: authors + ((art.authors?.length ?? 0) > 3 ? " et al." : ""),
           journal: art.fulljournalname ?? art.source ?? "",
           year: art.pubdate?.split(" ")?.[0] ?? "",
           abstract: "", // abstracts require efetch — skip for speed

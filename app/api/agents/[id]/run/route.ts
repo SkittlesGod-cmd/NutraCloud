@@ -4,6 +4,9 @@ import { getAIClient } from "@/lib/ai/client";
 import { getUserSubscription } from "@/lib/billing/subscription";
 import { canUseAgents } from "@/lib/billing/plans";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { checkGoalSafety, AGENT_DAILY_LIMIT } from "@/lib/agents/safety";
+import { parseJsonObject } from "@/lib/ai/json";
+import { getErrorMessage } from "@/lib/errors";
 import { z } from "zod";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -36,19 +39,45 @@ Rules:
 - Prioritize synergistic combinations; avoid known antagonisms
 - Doses must realistically fit the format (e.g. check capsule fill weights)
 - Do NOT include ingredients without a clear mechanistic rationale
+- Structure/function claims only — no disease treatment claims
 - Return valid JSON only — no markdown fences, no prose outside JSON`;
 
 function enc(event: string, data: unknown): Uint8Array {
   return new TextEncoder().encode(JSON.stringify({ event, data }) + "\n");
 }
 
-function extractJson(raw: string): unknown | null {
-  try { return JSON.parse(raw.trim()); } catch {}
-  const start = raw.indexOf("{");
-  const end = raw.lastIndexOf("}");
-  if (start === -1 || end === -1) return null;
-  try { return JSON.parse(raw.slice(start, end + 1)); } catch {}
-  return null;
+function errResponse(message: string, status: number) {
+  return new Response(JSON.stringify({ event: "error", data: { message } }) + "\n", { status });
+}
+
+const generatedIngredientSchema = z.object({
+  name: z.string().min(1),
+  dose: z.unknown().optional(),
+  unit: z.unknown().optional(),
+  rationale: z.unknown().optional(),
+});
+
+const generatedFormulationSchema = z.object({
+  name: z.string().min(1),
+  description: z.unknown().optional(),
+  target_population: z.unknown().optional(),
+  product_type: z.unknown().optional(),
+  serving_size: z.unknown().optional(),
+  capsule_size: z.unknown().optional(),
+  capsules_per_serving: z.unknown().optional(),
+  notes: z.unknown().optional(),
+  ingredients: z.array(generatedIngredientSchema).min(1),
+});
+
+async function getDailyRunCount(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<number> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const { count } = await supabase
+    .from("agent_runs")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("created_at", today.toISOString());
+  return count ?? 0;
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
@@ -56,18 +85,19 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return new Response(JSON.stringify({ event: "error", data: { message: "Unauthorized" } }) + "\n", { status: 401 });
-  }
+  if (!user) return errResponse("Unauthorized", 401);
 
   const sub = await getUserSubscription(user.id);
-  if (!canUseAgents(sub.plan)) {
-    return new Response(JSON.stringify({ event: "error", data: { message: "Pro plan required" } }) + "\n", { status: 403 });
-  }
+  if (!canUseAgents(sub.plan)) return errResponse("Agent Builder requires a Pro plan. Upgrade at /dashboard/billing.", 403);
 
+  // Per-minute rate limit (shared with other AI calls)
   const { allowed } = await checkRateLimit(user.id);
-  if (!allowed) {
-    return new Response(JSON.stringify({ event: "error", data: { message: "Rate limit exceeded" } }) + "\n", { status: 429 });
+  if (!allowed) return errResponse("Too many requests. Wait a moment and try again.", 429);
+
+  // Daily run limit
+  const todayCount = await getDailyRunCount(supabase, user.id);
+  if (todayCount >= AGENT_DAILY_LIMIT) {
+    return errResponse(`Daily agent run limit reached (${AGENT_DAILY_LIMIT}/day). Limit resets at midnight UTC.`, 429);
   }
 
   const { data: agent } = await supabase
@@ -77,50 +107,66 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!agent) {
-    return new Response(JSON.stringify({ event: "error", data: { message: "Agent not found" } }) + "\n", { status: 404 });
-  }
+  if (!agent) return errResponse("Agent not found.", 404);
 
   let body: unknown;
   try { body = await req.json(); } catch {
-    return new Response(JSON.stringify({ event: "error", data: { message: "Invalid JSON" } }) + "\n", { status: 400 });
+    return errResponse("Invalid request body.", 400);
   }
 
   const parsed = z.object({ goal: z.string().min(1).max(2000) }).safeParse(body);
-  if (!parsed.success) {
-    return new Response(JSON.stringify({ event: "error", data: { message: "Goal is required" } }) + "\n", { status: 400 });
-  }
+  if (!parsed.success) return errResponse("A goal is required to run the agent.", 400);
 
   const { goal } = parsed.data;
 
-  // Create a run record
+  // Content safety check
+  const safety = checkGoalSafety(goal);
+  if (!safety.allowed) return errResponse(safety.reason!, 422);
+
+  // Create run record (status: running)
   const { data: run } = await supabase
     .from("agent_runs")
     .insert({ agent_id: agentId, user_id: user.id, goal, status: "running" })
-    .select()
+    .select("id")
     .single();
 
   const runId = run?.id;
 
+  const runsRemaining = AGENT_DAILY_LIMIT - todayCount - 1;
+
   const stream = new ReadableStream({
     async start(controller) {
-      try {
-        controller.enqueue(enc("log", { message: "Analyzing your goal…" }));
+      // 90-second hard timeout — prevent stuck runs
+      const timeout = setTimeout(() => {
+        controller.enqueue(enc("error", { message: "Agent run timed out after 90 seconds." }));
+        controller.close();
+        if (runId) {
+          supabase.from("agent_runs")
+            .update({ status: "failed", error_message: "Timed out" })
+            .eq("id", runId)
+            .then(() => {});
+        }
+      }, 90_000);
 
-        // Build the prompt with agent context
+      try {
+        controller.enqueue(enc("log", { message: "Checking goal for safety…" }));
+        controller.enqueue(enc("log", { message: "Analyzing goal and planning formulation…" }));
+
+        const modelLabel = agent.model.split("/").pop()?.replace(":free", "") ?? agent.model;
+        controller.enqueue(enc("log", { message: `Running on ${modelLabel}…` }));
+
+        // Build prompt with agent context
         const contextLines: string[] = [];
         if (agent.persona) contextLines.push(`Agent persona: ${agent.persona}`);
         if (agent.target_population) contextLines.push(`Default target population: ${agent.target_population}`);
         if (agent.product_type) contextLines.push(`Preferred product type: ${agent.product_type}`);
 
         const userPrompt = [
-          contextLines.length > 0 ? contextLines.join("\n") + "\n" : "",
+          contextLines.length > 0 ? contextLines.join("\n") : "",
           `Goal: ${goal}`,
           "",
           "Return the formulation JSON now.",
-        ].join("\n");
-
-        controller.enqueue(enc("log", { message: `Running on ${agent.model.split("/").pop()?.replace(":free", "") ?? agent.model}…` }));
+        ].filter(Boolean).join("\n");
 
         const ai = getAIClient();
         const completion = await ai.chat.completions.create({
@@ -133,68 +179,90 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         });
 
         const raw = completion.choices[0]?.message?.content ?? "";
-        const formData = extractJson(raw) as Record<string, unknown> | null;
+        const formDataResult = generatedFormulationSchema.safeParse(parseJsonObject(raw));
 
-        if (!formData || !formData.name || !Array.isArray(formData.ingredients)) {
-          throw new Error("AI did not return a valid formulation. Try rephrasing your goal.");
+        if (!formDataResult.success) {
+          throw new Error("The model did not return a valid formulation. Try rephrasing your goal or switching to a different model.");
         }
 
-        controller.enqueue(enc("log", { message: "Formulation planned — saving to workspace…" }));
+        const formData = formDataResult.data;
+        controller.enqueue(enc("log", { message: `Planned ${formData.ingredients.length} ingredients — saving to workspace…` }));
 
         // Sanitize ingredients
-        const ingredients = (formData.ingredients as any[]).map((ing, i) => ({
-          id: `${Date.now()}-${i}`,
-          name: String(ing.name ?? ""),
-          dose: ing.dose != null ? String(ing.dose) : null,
-          unit: String(ing.unit ?? "mg"),
-          rationale: ing.rationale ? String(ing.rationale) : null,
-          notes: null,
-        }));
+        const ingredients = formData.ingredients
+          .filter(ing => ing.name && String(ing.name).trim().length > 0)
+          .slice(0, 20) // hard cap at 20 ingredients
+          .map((ing, i) => ({
+            id: `${Date.now()}-${i}`,
+            name: String(ing.name).trim().slice(0, 200),
+            dose: ing.dose != null ? String(ing.dose).replace(/[^0-9.]/g, "").slice(0, 20) : null,
+            unit: ["mg", "g", "mcg", "IU", "billion CFU", "mcg RAE"].includes(String(ing.unit))
+              ? String(ing.unit) : "mg",
+            rationale: ing.rationale ? String(ing.rationale).trim().slice(0, 500) : null,
+            notes: null,
+          }));
 
-        // Create formulation in DB
+        if (ingredients.length === 0) throw new Error("No valid ingredients were generated. Try a more specific goal.");
+
+        // Sanitize top-level fields
+        const name = String(formData.name).trim().slice(0, 200);
+        const description = formData.description ? String(formData.description).trim().slice(0, 1000) : null;
+        const product_type = ["capsule","tablet","softgel","gummy","powder","liquid","topical","strip"].includes(String(formData.product_type))
+          ? String(formData.product_type) : null;
+        const target_population = formData.target_population ? String(formData.target_population).trim().slice(0, 100) : null;
+        const serving_size = formData.serving_size ? String(formData.serving_size).trim().slice(0, 100) : null;
+        const capsule_size = formData.capsule_size ? String(formData.capsule_size).trim().slice(0, 50) : null;
+        const capsules_per_serving = typeof formData.capsules_per_serving === "number"
+          ? Math.min(Math.max(1, Math.round(formData.capsules_per_serving)), 10) : null;
+        const notes = formData.notes ? String(formData.notes).trim().slice(0, 3000) : null;
+
         const { data: formulation, error: formErr } = await supabase
           .from("formulations")
           .insert({
             user_id: user.id,
-            name: String(formData.name),
-            description: formData.description ? String(formData.description) : null,
-            product_type: formData.product_type ? String(formData.product_type) : null,
-            target_population: formData.target_population ? String(formData.target_population) : null,
-            serving_size: formData.serving_size ? String(formData.serving_size) : null,
-            capsule_size: formData.capsule_size ? String(formData.capsule_size) : null,
-            capsules_per_serving: typeof formData.capsules_per_serving === "number" ? formData.capsules_per_serving : null,
-            notes: formData.notes ? String(formData.notes) : null,
+            name,
+            description,
+            product_type,
+            target_population,
+            serving_size,
+            capsule_size,
+            capsules_per_serving,
+            notes,
             ingredients,
             status: "draft",
           })
           .select()
           .single();
 
-        if (formErr || !formulation) throw new Error(formErr?.message ?? "Failed to save formulation");
+        if (formErr || !formulation) throw new Error("Failed to save formulation. Please try again.");
 
-        // Mark run complete
         if (runId) {
-          await supabase
-            .from("agent_runs")
+          await supabase.from("agent_runs")
             .update({ status: "complete", formulation_id: formulation.id })
             .eq("id", runId);
         }
 
         if (agent.auto_enrich) {
-          controller.enqueue(enc("log", { message: `Enriching evidence for ${ingredients.length} ingredients…` }));
+          controller.enqueue(enc("log", { message: `Enriching PubMed evidence for ${ingredients.length} ingredients…` }));
+          let enriched = 0;
           for (const ing of ingredients) {
             if (!ing.name) continue;
             try {
-              await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/ai/ingredient`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Cookie: req.headers.get("cookie") ?? "" },
-                body: JSON.stringify({ ingredient_id: ing.id, formulation_id: formulation.id }),
-              });
+              const r = await fetch(
+                `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/ai/ingredient`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", Cookie: req.headers.get("cookie") ?? "" },
+                  body: JSON.stringify({ ingredient_id: ing.id, formulation_id: formulation.id }),
+                }
+              );
+              if (r.ok) enriched++;
             } catch {}
           }
-          controller.enqueue(enc("log", { message: "Evidence enrichment complete." }));
+          controller.enqueue(enc("log", { message: `Evidence enriched for ${enriched}/${ingredients.length} ingredients.` }));
         }
 
+        clearTimeout(timeout);
         controller.enqueue(enc("complete", {
           formulation: {
             id: formulation.id,
@@ -202,15 +270,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
             ingredient_count: ingredients.length,
             url: `/dashboard/formulations/${formulation.id}`,
           },
+          runs_remaining: runsRemaining,
         }));
-      } catch (err: any) {
+      } catch (err: unknown) {
+        clearTimeout(timeout);
+        const msg = getErrorMessage(err, "Agent run failed. Please try again.");
         if (runId) {
-          await supabase
-            .from("agent_runs")
-            .update({ status: "failed", error_message: err?.message ?? "Unknown error" })
+          await supabase.from("agent_runs")
+            .update({ status: "failed", error_message: msg })
             .eq("id", runId);
         }
-        controller.enqueue(enc("error", { message: err?.message ?? "Agent run failed" }));
+        controller.enqueue(enc("error", { message: msg }));
       } finally {
         controller.close();
       }

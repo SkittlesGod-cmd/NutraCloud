@@ -78,7 +78,7 @@ export default function AgentsPage() {
           </div>
           <h2 className="text-[18px] font-semibold tracking-tight text-gray-950">Unlock AI Agent Builder</h2>
           <p className="mt-2 mx-auto max-w-md text-[13px] leading-relaxed text-gray-500">
-            Create custom formulation agents powered by GPT-4o, Claude 3.5, Gemini, and more. Configure each agent's persona, target population, and product constraints — then give it a goal and watch it build a complete, evidence-backed formulation in seconds.
+            Create custom formulation agents powered by GPT-4o, Claude 3.5, Gemini, and more. Configure each agent&apos;s persona, target population, and product constraints — then give it a goal and watch it build a complete, evidence-backed formulation in seconds.
           </p>
           <div className="mt-6 grid max-w-sm mx-auto gap-2 text-left">
             {["Choose from 8 AI models including Claude & GPT-4o", "Configure agent persona and formulation constraints", "Auto-enrich ingredients with PubMed evidence", "Builds full formulation in your workspace instantly"].map(f => (

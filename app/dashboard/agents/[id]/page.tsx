@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { AGENT_MODELS, getModel, TIER_BADGE } from "@/lib/agents/models";
 import { PRODUCT_TYPES, PRODUCT_TYPE_LABELS, TARGET_POPULATIONS } from "@/lib/formulations/types";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Agent {
   id: string;
@@ -46,6 +47,28 @@ interface RunEvent {
   data: Record<string, unknown>;
 }
 
+interface RunFormulationSummary {
+  id: string;
+  name: string;
+  ingredient_count: number;
+  url: string;
+}
+
+function isRunFormulationSummary(value: unknown): value is RunFormulationSummary {
+  if (value === null || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return typeof v.id === "string" &&
+    typeof v.name === "string" &&
+    typeof v.ingredient_count === "number" &&
+    typeof v.url === "string";
+}
+
+function jsonErrorMessage(value: unknown, fallback: string): string {
+  if (value === null || typeof value !== "object") return fallback;
+  const v = value as Record<string, unknown>;
+  return typeof v.error === "string" ? v.error : fallback;
+}
+
 function relativeDate(iso: string) {
   const d = new Date(iso);
   const diffD = Math.floor((Date.now() - d.getTime()) / 86_400_000);
@@ -64,6 +87,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
 
   const [agent, setAgent] = useState<Agent | null>(null);
   const [runs, setRuns] = useState<AgentRun[]>([]);
+  const [daily, setDaily] = useState<{ used: number; limit: number; remaining: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -85,7 +109,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
   const [goal, setGoal] = useState("");
   const [running, setRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
-  const [runResult, setRunResult] = useState<{ id: string; name: string; ingredient_count: number; url: string } | null>(null);
+  const [runResult, setRunResult] = useState<RunFormulationSummary | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +120,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
         if (j.agent) {
           setAgent(j.agent);
           setRuns(j.runs ?? []);
+          if (j.daily) setDaily(j.daily);
           setForm({
             name: j.agent.name,
             description: j.agent.description ?? "",
@@ -141,8 +166,8 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
       setAgent(j.agent);
       setDirty(false);
       toast.success("Agent saved");
-    } catch (e: any) {
-      toast.error(e.message ?? "Failed to save");
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, "Failed to save"));
     } finally {
       setSaving(false);
     }
@@ -177,7 +202,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
 
       if (!res.ok || !res.body) {
         const j = await res.json().catch(() => ({}));
-        throw new Error((j as any)?.error ?? "Run failed");
+        throw new Error(jsonErrorMessage(j, "Run failed"));
       }
 
       const reader = res.body.getReader();
@@ -197,7 +222,8 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
             if (evt.event === "log") {
               setLogs(l => [...l, String(evt.data.message ?? "")]);
             } else if (evt.event === "complete") {
-              const f = evt.data.formulation as any;
+              const f = evt.data.formulation;
+              if (!isRunFormulationSummary(f)) throw new Error("Agent returned an invalid completion payload.");
               setRunResult(f);
               setRuns(r => [{
                 id: Date.now().toString(),
@@ -206,14 +232,18 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
                 formulation_id: f.id,
                 created_at: new Date().toISOString(),
               }, ...r]);
+              const remaining = typeof evt.data.runs_remaining === "number" ? evt.data.runs_remaining : null;
+              if (remaining !== null) {
+                setDaily(d => d ? { ...d, remaining, used: d.limit - remaining } : null);
+              }
             } else if (evt.event === "error") {
               setRunError(String(evt.data.message ?? "Agent run failed"));
             }
           } catch {}
         }
       }
-    } catch (e: any) {
-      setRunError(e.message ?? "Run failed");
+    } catch (e: unknown) {
+      setRunError(getErrorMessage(e, "Run failed"));
     } finally {
       setRunning(false);
     }
@@ -283,19 +313,38 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
         <div className="space-y-4">
           {/* Goal input + run */}
           <div className="rounded-xl border border-black/[0.06] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-            <div className="border-b border-black/[0.05] px-5 py-3.5">
-              <h2 className="text-[13px] font-semibold text-gray-900">Run agent</h2>
-              <p className="mt-0.5 text-[11px] text-gray-400">
-                Describe what you want to build — the agent will plan and create a complete formulation.
-              </p>
+            <div className="border-b border-black/[0.05] px-5 py-3.5 flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-[13px] font-semibold text-gray-900">Run agent</h2>
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  Describe what you want to build — the agent will plan and create a complete formulation.
+                </p>
+              </div>
+              {daily && (
+                <div className={cn(
+                  "shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold tabular-nums",
+                  daily.remaining === 0
+                    ? "bg-red-100 text-red-600"
+                    : daily.remaining <= 5
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-gray-100 text-gray-500"
+                )}>
+                  {daily.remaining}/{daily.limit} runs left today
+                </div>
+              )}
             </div>
+            {daily?.remaining === 0 && (
+              <div className="border-b border-amber-100 bg-amber-50 px-5 py-3">
+                <p className="text-[12px] text-amber-700 font-medium">Daily limit reached — resets at midnight UTC.</p>
+              </div>
+            )}
             <div className="p-5 space-y-3">
               <textarea
                 value={goal}
                 onChange={e => setGoal(e.target.value)}
                 rows={4}
                 placeholder={`e.g. "Create a high-stimulant pre-workout for experienced athletes with a 2-scoop powder format, focused on strength and endurance"`}
-                disabled={running}
+                disabled={running || daily?.remaining === 0}
                 className="w-full resize-none rounded-lg border border-black/[0.08] bg-white px-3 py-2.5 text-[13px] leading-relaxed outline-none transition placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/15 disabled:opacity-50"
               />
               <div className="flex items-center justify-between gap-3">
@@ -305,7 +354,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
                 </p>
                 <button
                   onClick={handleRun}
-                  disabled={running || !goal.trim()}
+                  disabled={running || !goal.trim() || daily?.remaining === 0}
                   className="flex items-center gap-1.5 rounded-lg bg-gray-950 px-4 py-2 text-[13px] font-medium text-white transition hover:bg-gray-800 disabled:opacity-40"
                 >
                   {running ? <Loader2 className="size-3.5 animate-spin" /> : <Play className="size-3.5" />}
@@ -515,7 +564,7 @@ export default function AgentDetailPage({ params }: { params: Promise<{ id: stri
           <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-[0_24px_80px_rgba(0,0,0,0.2)]">
             <h3 className="text-[15px] font-semibold text-gray-950">Delete agent?</h3>
             <p className="mt-1.5 text-[13px] text-gray-500">
-              "{agent.name}" and its run history will be permanently removed.
+              &quot;{agent.name}&quot; and its run history will be permanently removed.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setConfirmDelete(false)} disabled={deleting}
