@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Beaker, ChevronDown, CreditCard, FlaskConical, LayoutDashboard, LogOut, User } from "lucide-react";
+import { Beaker, Bot, ChevronDown, CreditCard, FlaskConical, LayoutDashboard, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createBrowserClient } from "@/utils/supabase/client";
 
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/formulations", label: "Formulations", icon: Beaker },
   { href: "/dashboard/research", label: "Research", icon: FlaskConical },
+  { href: "/dashboard/agents", label: "Agents", icon: Bot, pro: true },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
 ];
 
@@ -67,18 +68,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Center nav */}
           <nav className="flex items-center gap-1">
-            {NAV.map(({ href, label, exact }) => (
+            {NAV.map(({ href, label, exact, pro }) => (
               <Link
                 key={href}
                 href={href}
                 className={cn(
-                  "relative px-3 py-1.5 text-[13px] font-medium transition-colors rounded-md",
+                  "relative flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium transition-colors rounded-md",
                   isActive(href, exact)
                     ? "text-gray-950 bg-black/[0.05]"
                     : "text-gray-500 hover:text-gray-900 hover:bg-black/[0.03]"
                 )}
               >
                 {label}
+                {pro && (
+                  <span className="rounded-full bg-brand/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-brand">
+                    Pro
+                  </span>
+                )}
               </Link>
             ))}
           </nav>

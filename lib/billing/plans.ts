@@ -49,10 +49,11 @@ export const PLANS: Record<PlanId, Plan> = {
     features: [
       "Unlimited formulations",
       "Everything in Starter",
+      "AI Agent Builder (GPT-4o, Claude, Gemini…)",
       "Manufacturer handoff & RFQ brief",
       "Formulation versioning",
       "Public share links",
-      "Team collaboration (coming soon)",
+      "Team collaboration",
     ],
   },
 };
@@ -78,5 +79,9 @@ export function canUseHandoff(plan: PlanId): boolean {
 }
 
 export function canUseVersioning(plan: PlanId): boolean {
+  return plan === "pro";
+}
+
+export function canUseAgents(plan: PlanId): boolean {
   return plan === "pro";
 }
